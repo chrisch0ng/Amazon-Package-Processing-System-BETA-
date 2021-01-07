@@ -1,0 +1,96 @@
+def get_iso_codes_by_continent (input_filename):
+    """
+    Input Arguments: (str) >>> dict
+    
+    Description: given an input string representing a file name, function returns dictionary mapping continents' names (all upper case)
+    to a list of iso codes of countries belonging to that continent 
+    
+    >>> d = get_iso_codes_by_continent("iso_codes_by_continent.tsv")
+    >>> len(d['ASIA'])
+    50
+    
+    >>> d = get_iso_codes_by_continent("iso_codes_by_continent.tsv")
+    >>> len(d['EUROPE'])
+    48
+    
+    >>> d = get_iso_codes_by_continent("iso_codes_by_continent.tsv")
+    >>> d['ASIA'][2]
+    'LAO'
+    
+    """
+    
+    input_file = open(input_filename, "r", encoding="utf-8")
+    continent_dict = {} # sets variable to empty dictionary 
+    
+    
+    for line in input_file: # scans through each line in the input file
+        line = line.replace("\n", "") # replaces "/n" with empty string in the line string variable 
+        continent_list = line.split("\t") # splits line variable into list using \t as the delimiter 
+        
+        continent_ISO = continent_list[0] # sets variable to first element of list, which would be the iso code 
+        continent_name = continent_list [1].upper() # sets variable to second element of list, which is fully capitalized name 
+        
+    
+        if continent_name in continent_dict: # continent name already in continent_dict 
+            inner_continent_list = continent_dict.get(continent_name) # retrieves inner list of iso codes within continent_dict 
+            inner_continent_list.append(continent_ISO) # adds iso code to inner list of iso codes
+            
+        else: # if continent name not already in continent_dict 
+            continent_dict [continent_name] = [continent_ISO] # creates new key value pair mapping continent to list with first iso code 
+        
+    return continent_dict # returns continent_dictionary, with continents mapping to lists of iso codes of countries in that continent 
+
+
+
+def add_continents_to_data (input_filename, continents_filename, output_filename):
+    """
+    Input Arguments: (str, str, str) >>> dict
+    
+    Description: given an three input strings, with the first representing an input file, the second representing a file with the same format as
+    the iso_codes_by_continent.tsv described by the rubric, and the third representing an output file. The function simply adds in a third column
+    representing the continent to which each continent belongs, writing each new line to the output file. Function then returns number of lines that
+    have been written to the output file. 
+    
+    >>> add_continents_to_data("small_clean_co2_data.tsv", "iso_codes_by_continent.tsv", "small_co2_data.tsv")
+    10
+    
+    >>> add_continents_to_data("cleaned-12-line-long-data.tsv", "iso_codes_by_continent.tsv", "12-line-long-data.tsv")
+    12
+    
+    >>> add_continents_to_data("cleaned-1-line-long-data.tsv", "iso_codes_by_continent.tsv", "1-line-long-data.tsv")
+    1
+
+    
+    """
+
+    input_file = open(input_filename, "r", encoding="utf-8")
+    output_file = open(output_filename, "w", encoding="utf-8")
+    line_count = 0 # sets variable to 0 as initial count 
+    
+    continent_dict = get_iso_codes_by_continent(continents_filename) # retrieves list of iso codes tied to continent in form of dictionary 
+    
+    for line in input_file: # scans through each line in the input file 
+        
+        line_list = line.split("\t") # splits string into list using \t as delimiter 
+        
+        line_ISO = line_list[0] # sets first column to iso code 
+        ISO_list = [] 
+        
+        for continent in continent_dict: # scans through each continent in continent_dict 
+            if line_ISO in continent_dict.get(continent): # checks for iso code membership in continent_dict
+                ISO_list.append(continent) # if iso code is found within continent, adds continent to iso_list 
+        
+        line_list.insert(2, ", ".join(ISO_list)) # adds continents as 3rd column in line_list, using ", " to separate continents if there are multiple    
+        
+        final_line = "\t".join(line_list) # sets variable to string joining line_list using \t as delimiter 
+        
+        output_file.write (final_line) # writes final_line to output file
+    
+        line_count += 1 # adds 1 to the line_count 
+    
+    return line_count # function returns the line_count 
+     
+    
+    
+    
+    
