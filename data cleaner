@@ -1,0 +1,168 @@
+def find_delim (input_str):
+    """
+    Input Arguments: (str) >>> str
+    
+    Description: given an input string representing a single line, function returns most commonly used
+    delimiter in input string, which could include tabs, commas, spaces, and dashes. 
+    
+    >>> find_delim("cat\\tdog bat\\tcrab-cod")
+    '\\t'
+    
+    >>> find_delim("cat-dog-cat-donkey")
+    '-'
+    
+    >>> find_delim("1 2 3 4 5")
+    ' '
+    
+    """
+
+    most_delim_name = ''
+    most_delim = 0 
+    
+    tab_count =  input_str.count("\t") # counts number of tabs in string 
+    comma_count =  input_str.count(",") # counts number of commas in string 
+    space_count  = input_str.count (" ") # counts number of spaces in string 
+    dash_count =  input_str.count("-") # counts number of dashes in string 
+    
+    delim_count = {"\t": tab_count, ",": comma_count, " ": space_count, "-": dash_count}
+    
+    for delim in delim_count:
+        
+        if most_delim < delim_count.get(delim):
+            most_delim = delim_count.get(delim) # determines which delimiter is used the most frequently 
+            most_delim_name = delim 
+            
+        else:
+            continue
+    
+    most_common_delim = most_delim_name # sets variable to most common delimiter
+    
+    if most_common_delim == '':
+        raise AssertionError ("This is an Assertion Error!") # function raises assertion error if there is no identified delim in string 
+    
+    return most_common_delim # returns most common delimiter 
+
+
+
+def clean_one (input_filename, output_filename):
+    """
+    Input Arguments: (str, str) >>> int
+    
+    Description: given an 2 input strings, one representing the file name for a file to be read and another
+    for the file name for a file to be written, function will read the input_filename, make tabs the only
+    delimiter in each line, and write this new version of the lines to the output_filename. Function simply
+    returns the number of new lines that have been written. 
+    
+    >>> clean_one('large_raw_co2_data.txt', 'large_tab_sep_co2_data.tsv')
+    17452
+    
+    >>> clean_one('15-line-long-raw-data.txt', 'tab-sep-15-line-long-data.tsv')
+    15
+    
+    >>> clean_one('1-line-long-raw-data.txt', 'tab-sep-1-line-long-data.tsv')
+    1
+    """
+
+    input_file = open(input_filename, "r", encoding="utf-8")
+    output_file = open(output_filename, "w", encoding="utf-8")
+    line_count = 0 
+    
+    
+    for line in input_file: # reads through each line in the input file 
+        original_delim = find_delim (line) # finds most commonly used delim in line 
+        
+        if original_delim != "\t": # ensures that delim is \t 
+            new_line = line.replace(original_delim, "\t")
+            output_file.write(new_line)
+            line_count += 1 # adds one to the line_count variable 
+            
+        else:
+            output_file.write (line) # since delim is \t, simply writes to output file 
+            line_count += 1
+            continue
+
+    return line_count # adds one to the line_count variable 
+    
+
+
+def final_clean (input_filename, output_filename):
+    """
+    Input Arguments: (str, str) >>> NoneType
+    
+    Description: given an 2 input strings, one representing the file name for a file to be read and another
+    for the file name for a file to be written, function ensures each line has proper number of columns, and organizes
+    data into proper columns and returns integer indicating number of lines written to output_filename
+    
+    >>> final_clean('large_tab_co2_data.tsv', 'large_clean_sep_co2_data.tsv')
+    17452
+    
+    >>> final_clean('tab-sep-12-line-long-data.tsv', 'cleaned-12-line-long-data.tsv')
+    12
+    
+    >>> final_clean('tab-sep-1-line-long-data.tsv', 'cleaned-1-line-long-data.tsv')
+    1
+    
+    """
+
+    input_file = open(input_filename, "r", encoding="utf-8")
+    output_file = open(output_filename, "w", encoding="utf-8")
+    line_count = 0 
+    numbers = '1234567890'
+    decimal_point = "."
+    non_number_entry = ''
+    
+    for line in input_file:
+        
+        tab_count = line.count("\t")
+        
+        line = line.replace(",", ".") # replaces commas with periods
+        
+        line_list = line.split("\t") # splits line into line_list with \t as the delimiter 
+        
+        if tab_count != 4: # if the number of columns isn't 5 (tab count isn't 4)
+                
+            if decimal_point not in str(line_list [len(line_list) - 2 : len(line_list)]) and line_list[len(line_list) - 2] != "": 
+                line_list[len(line_list)-3:len(line_list)-1] = ['.'.join(line_list[len(line_list)-3:len(line_list)-1])] # ensures decimal point is not in last 3 columns 
+                
+                if decimal_point in line_list[2]: # detects if decimal point is in year column, removes it if so
+                    line_list[2] = line_list[2].replace(".", "")
+                
+                if line_list [2][0] not in numbers: # checks first character of 3rd column, to ensure name of country is all within correct column 
+                    line_list [1 : len(line_list) - 2] = [' '.join(line_list [1 : len(line_list) - 2])]
+                
+                new_line = '\t'.join(line_list) # sets variable to line_list joined by \t delimiter 
+                
+                output_file.write(new_line) # writes new_line to output_file 
+                
+                
+            elif ' '.join(line_list [1 : len(line_list) - 3]) not in numbers: # checks middle columns to ensure they are not numbers 
+                line_list [1 : len(line_list) - 3] = [' '.join(line_list [1 : len(line_list) - 3])]
+                
+                for char in str(line_list [2]): # checks first character in 3rd column to see if it is a number
+                    if char not in numbers:
+                        non_number_entry = True # sets variable to True if first character in 3rd column is not a number 
+                        break
+                    else:
+                        break
+                
+                if non_number_entry == True: # if a non-number character is in the 3rd column, combines 2nd and 3rd column of list
+                    line_list[1] = line_list[1] + " " + line_list[2] # ensures that full name of country is in proper column 
+                    line_list.pop(2)
+                    non_number_entry = False # resets indicator variable to use for next line 
+                
+                
+                new_line = '\t'.join(line_list) # joins line_list variable using the \t delimiter 
+                
+                output_file.write(new_line) # writes new line to output file 
+        
+        
+        else:
+            output_file.write (line) # if number of columns is 5, simply writes line to output file
+           
+        line_count += 1 # adds 1 to line count 
+        
+    return line_count # returns line count 
+
+
+
+
